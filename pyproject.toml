@@ -43,8 +43,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-# Le code source vit dans todo/mlproject ; on l'expose en tant que package `mlproject`.
-packages = ["todo/mlproject"]
+# Le code source vit dans src/mlproject ; on l'expose en tant que package `mlproject`.
+packages = ["src/mlproject"]
 
 [tool.ruff]
 line-length = 100
