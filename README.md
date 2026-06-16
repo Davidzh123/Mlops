@@ -65,3 +65,52 @@ Le CSV (~154 Mo) n'est **pas versionné**. Il se télécharge automatiquement vi
 
 > Le token Kaggle est **personnel** et ne doit jamais être committé : il reste dans
 > `~/.kaggle/`, hors du dépôt. Chaque personne utilise son propre token avec le même script.
+
+## Modélisation et suivi MLflow
+
+Trois familles de modèles sont comparées : **RandomForest**, **XGBoost**, **LightGBM**. Le
+déséquilibre des classes est géré (`class_weight="balanced"`, `scale_pos_weight`) et la
+métrique optimisée est le `roc_auc`.
+
+Deux stratégies d'optimisation des hyperparamètres :
+
+| Script | Méthode | Description |
+|--------|---------|-------------|
+| `src/mlproject/train.py` | aucune | baseline (régression logistique), point de référence |
+| `src/mlproject/train_models.py` | **GridSearchCV** | recherche exhaustive sur une grille fixe |
+| `src/mlproject/train_optuna.py` | **Optuna (TPE)** | recherche bayésienne, plus efficace |
+
+Deux modules utilitaires partagés :
+- `src/mlproject/tracking.py` : configuration MLflow (expérience, tags) et log du dataset.
+- `src/mlproject/evaluation.py` : graphique d'importance SHAP loggé comme artefact.
+
+Chaque modèle est suivi dans **MLflow** (backend SQLite `mlflow.db`) : hyperparamètres,
+métriques, matrice de confusion, rapport de classification, importance SHAP. Le meilleur
+modèle est enregistré dans le **Model Registry** sous `fraude-bancaire-classifier`.
+
+### Pipeline (via Makefile)
+
+```bash
+make install          # 1. environnement + dépendances (uv)
+make train            # 2. baseline (régression logistique)
+make train-models     # 3. comparaison GridSearchCV + MLflow
+make train-optuna     # 4. optimisation Optuna + MLflow
+make mlflow           # 5. interface MLflow sur http://127.0.0.1:5000
+```
+
+> Dans l'interface MLflow, ouvrir l'expérience `fraude-bancaire` puis l'onglet
+> **Training runs** (l'onglet *Overview/Usage* concerne les traces GenAI et reste vide).
+
+### Résultats
+
+Comparaison des modèles (échantillon de test) :
+
+![Comparaison des modèles](docs/metrics_comparison.png)
+
+Matrices de confusion :
+
+![Matrices de confusion](docs/confusion_matrices.png)
+
+> Le `roc_auc` est la métrique de référence (données déséquilibrées). Optuna atteint
+> `roc_auc ≈ 0.72`, au-dessus de la baseline (0.711). Les figures sont régénérables avec
+> `uv run python scripts/make_report.py`.

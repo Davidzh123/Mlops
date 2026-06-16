@@ -40,6 +40,15 @@ CATEGORICAL_FEATURES: list[str] = [
 
 RANDOM_STATE = 42
 
-MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
-MLFLOW_EXPERIMENT = os.getenv("MLFLOW_EXPERIMENT", "fraude-bancaire-baseline")
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", f"sqlite:///{ROOT / 'mlflow.db'}")
+MLFLOW_EXPERIMENT = os.getenv("MLFLOW_EXPERIMENT", "fraude-bancaire")
 MODEL_NAME = os.getenv("MODEL_NAME", "fraude-bancaire-classifier")
+
+MLFLOW_EXPERIMENT_DESCRIPTION = (
+    "Detection de fraude bancaire : comparaison de 3 modeles (RandomForest, "
+    "XGBoost, LightGBM) optimises par GridSearchCV."
+)
+MLFLOW_EXPERIMENT_TAGS = {
+    "projet": "fraude-bancaire",
+    "type": "classification-binaire",
+}

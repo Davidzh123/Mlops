@@ -104,16 +104,16 @@ data: ## Prepare/genere le jeu de donnees dans data/
 	# TODO (S0) : appeler votre script de preparation de donnees
 
 train: ## Entraine la baseline -> models/model.joblib (C=.. MAX_ITER=..)
-	# TODO (S5) : $(PYTHON) -m mlproject.train --c $(C) --max-iter $(MAX_ITER)
+	$(PYTHON) -m mlproject.train --c $(C) --max-iter $(MAX_ITER)
 
-train-models: ## Compare RF / XGBoost / LightGBM (GridSearchCV) + SHAP (CV=.. SCORING=..)
-	# TODO (S7) : $(PYTHON) -m mlproject.train_models --cv $(CV) --scoring $(SCORING)
+train-models: ## Compare RandomForest / XGBoost / LightGBM (GridSearchCV) + MLflow (CV=.. SAMPLE=..)
+	$(PYTHON) -m mlproject.train_models --cv $(CV) --scoring $(SCORING)
 
-train-optuna: ## Optimise RF / XGBoost / LightGBM avec Optuna (N_TRIALS=.. CV=..)
-	# TODO (S6) : $(PYTHON) -m mlproject.train_optuna --n-trials $(N_TRIALS) --cv $(CV)
+train-optuna: ## Optimise RF / XGBoost / LightGBM avec Optuna + MLflow (N_TRIALS=.. CV=..)
+	$(PYTHON) -m mlproject.train_optuna --n-trials $(N_TRIALS) --cv $(CV)
 
-mlflow: ## Demarre le serveur MLflow (docker compose)
-	# TODO (S5) : docker compose -f docker-compose.yml up -d mlflow
+mlflow: ## Demarre l'interface MLflow (backend SQLite) sur http://127.0.0.1:5000
+	$(RUN) mlflow ui --backend-store-uri sqlite:///mlflow.db --host 127.0.0.1 --port $(MLFLOW_PORT)
 
 api: ## Lance l'API FastAPI en rechargement auto (voir API_HOST/API_PORT)
 	# TODO (S12) : $(RUN) uvicorn mlproject.api:app --reload --host $(API_HOST) --port $(API_PORT)
