@@ -8,6 +8,7 @@ Lance les trois composants et verifie :
 Usage :
     uv run python scripts/preview_data.py
 """
+
 from __future__ import annotations
 
 import sys
@@ -44,8 +45,10 @@ def main() -> int:
         n_classes = df[TARGET].nunique()
         binaire = sorted(df[TARGET].dropna().unique().tolist()) == [0, 1]
         flag = OK if binaire else KO
-        print(f"  {flag} cible '{TARGET}' : {n_classes} valeurs uniques "
-              f"{'(binaire 0/1)' if binaire else '(NON binaire !)'}")
+        print(
+            f"  {flag} cible '{TARGET}' : {n_classes} valeurs uniques "
+            f"{'(binaire 0/1)' if binaire else '(NON binaire !)'}"
+        )
         if not binaire:
             errors.append(f"cible '{TARGET}' non binaire")
 
@@ -54,8 +57,10 @@ def main() -> int:
         errors.append(f"colonnes introuvables : {manquantes}")
         print(f"  {KO} colonnes introuvables dans le CSV : {manquantes}")
     else:
-        print(f"  {OK} {len(NUMERIC_FEATURES)} num + {len(CATEGORICAL_FEATURES)} cat "
-              f"toutes presentes dans le CSV")
+        print(
+            f"  {OK} {len(NUMERIC_FEATURES)} num + {len(CATEGORICAL_FEATURES)} cat "
+            f"toutes presentes dans le CSV"
+        )
 
     if errors:
         print(f"\n{KO} config.py invalide, on s'arrete avant data.py/features.py.")
@@ -76,9 +81,11 @@ def main() -> int:
     x_test_t = pre.transform(x_test)
     n_in = len(NUMERIC_FEATURES) + len(CATEGORICAL_FEATURES)
     n_out = x_train_t.shape[1]
-    print(f"\n[4] features.py -> pre-processing applique")
-    print(f"  {OK} colonnes : {n_in} en entree -> {n_out} apres encodage "
-          f"(OneHot sur {len(CATEGORICAL_FEATURES)} colonnes cat.)")
+    print("\n[4] features.py -> pre-processing applique")
+    print(
+        f"  {OK} colonnes : {n_in} en entree -> {n_out} apres encodage "
+        f"(OneHot sur {len(CATEGORICAL_FEATURES)} colonnes cat.)"
+    )
     print(f"  {OK} train transforme : {x_train_t.shape}   test : {x_test_t.shape}")
 
     print("\n" + "=" * 70)

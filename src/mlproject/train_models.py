@@ -26,7 +26,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from xgboost import XGBClassifier
 
-from mlproject.config import MLFLOW_EXPERIMENT, MODEL_DIR, MODEL_NAME, RANDOM_STATE
+from mlproject.config import MODEL_DIR, MODEL_NAME, RANDOM_STATE
 from mlproject.data import load_data, split
 from mlproject.evaluation import log_shap_summary
 from mlproject.features import build_preprocessor
@@ -180,7 +180,9 @@ def train_all(cv: int = 5, scoring: str = "roc_auc", sample: int = 40_000) -> li
 
     print("\n=== Resultats des modeles ===")
     for r in results:
-        print(f"{r.name:15s} | cv_{scoring}={r.cv_score:.3f} | f1={r.f1:.3f} | roc_auc={r.roc_auc:.3f}")
+        print(
+            f"{r.name:15s} | cv_{scoring}={r.cv_score:.3f} | f1={r.f1:.3f} | roc_auc={r.roc_auc:.3f}"
+        )
     print(f"Meilleur modele : {best.name} (roc_auc={best.roc_auc:.3f})")
 
     with mlflow.start_run(run_name="compare-models"):

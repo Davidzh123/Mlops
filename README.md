@@ -114,3 +114,29 @@ Matrices de confusion :
 > Le `roc_auc` est la métrique de référence (données déséquilibrées). Optuna atteint
 > `roc_auc ≈ 0.72`, au-dessus de la baseline (0.711). Les figures sont régénérables avec
 > `uv run python scripts/make_report.py`.
+
+## Servir le modèle (API FastAPI)
+
+Le modèle entraîné (`models/model.joblib`) est exposé via une API FastAPI
+(`src/mlproject/api.py`). Le schéma d'entrée `Features` reprend exactement les colonnes du
+dataset (numériques + catégorielles).
+
+Endpoints :
+- `GET /health` : état du service et du modèle
+- `POST /predict` : prédiction (classe `0/1` + probabilité de fraude)
+- `GET /model-info` : version servie (variable d'environnement `MODEL_VERSION`)
+- `GET /docs` : documentation interactive (Swagger)
+
+```bash
+make api                    # démarre l'API sur http://127.0.0.1:8000
+make predict                # (autre terminal) envoie une transaction d'exemple
+```
+
+`scripts/predict.py` est un client de test : il envoie une transaction à `/predict` et
+affiche le résultat. L'URL de l'API est configurable via la variable `API_URL`.
+
+Exemple de réponse :
+
+```json
+{ "prediction": 1, "probability": 0.87 }
+```

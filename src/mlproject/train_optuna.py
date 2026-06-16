@@ -27,7 +27,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import Pipeline
 from xgboost import XGBClassifier
 
-from mlproject.config import MLFLOW_EXPERIMENT, MODEL_DIR, MODEL_NAME, RANDOM_STATE
+from mlproject.config import MODEL_DIR, MODEL_NAME, RANDOM_STATE
 from mlproject.data import load_data, split
 from mlproject.evaluation import log_shap_summary
 from mlproject.features import build_preprocessor
@@ -107,9 +107,7 @@ def optimize_family(family, x_train, y_train, x_test, y_test, n_trials, cv, spw)
     study = optuna.create_study(
         direction="maximize", sampler=optuna.samplers.TPESampler(seed=RANDOM_STATE)
     )
-    study.optimize(
-        lambda t: objective(t, family, x_train, y_train, cv, spw), n_trials=n_trials
-    )
+    study.optimize(lambda t: objective(t, family, x_train, y_train, cv, spw), n_trials=n_trials)
 
     best = build_pipeline(build_estimator(family, study.best_params, spw))
     best.fit(x_train, y_train)
@@ -180,7 +178,9 @@ def optimize(n_trials: int = 20, cv: int = 3, sample: int = 40_000) -> list[Fami
 
     print("\n=== Resultats Optuna ===")
     for r in results:
-        print(f"{r.name:15s} | cv_roc_auc={r.cv_score:.3f} | f1={r.f1:.3f} | roc_auc={r.roc_auc:.3f}")
+        print(
+            f"{r.name:15s} | cv_roc_auc={r.cv_score:.3f} | f1={r.f1:.3f} | roc_auc={r.roc_auc:.3f}"
+        )
     print(f"Meilleur modele : {best.name} (roc_auc={best.roc_auc:.3f})")
 
     with mlflow.start_run(run_name="optuna-compare"):

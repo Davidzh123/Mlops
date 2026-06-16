@@ -34,7 +34,7 @@ RESET  := $(shell printf '\033[0m')
 
 .PHONY: help \
         check-uv check-venv venv-create install sync deps-sync lock reset-env doctor \
-        data train train-models train-optuna mlflow api frontend \
+        data train train-models train-optuna mlflow api predict frontend \
         docker-build docker-run docker-up docker-down \
         lint format type test check
 
@@ -116,7 +116,10 @@ mlflow: ## Demarre l'interface MLflow (backend SQLite) sur http://127.0.0.1:5000
 	$(RUN) mlflow ui --backend-store-uri sqlite:///mlflow.db --host 127.0.0.1 --port $(MLFLOW_PORT)
 
 api: ## Lance l'API FastAPI en rechargement auto (voir API_HOST/API_PORT)
-	# TODO (S12) : $(RUN) uvicorn mlproject.api:app --reload --host $(API_HOST) --port $(API_PORT)
+	$(RUN) uvicorn mlproject.api:app --reload --host $(API_HOST) --port $(API_PORT)
+
+predict: ## Appelle l'API /predict avec une transaction d'exemple (scripts/predict.py)
+	$(PYTHON) scripts/predict.py
 
 frontend: ## Lance le frontend Streamlit (voir FRONTEND_PORT, API_URL)
 	# TODO (S14bis) : $(RUN) streamlit run frontend/app.py --server.port $(FRONTEND_PORT)

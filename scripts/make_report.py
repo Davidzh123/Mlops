@@ -6,6 +6,7 @@ puis sauvegarde les figures dans docs/.
 Usage :
     uv run python scripts/make_report.py
 """
+
 from __future__ import annotations
 
 import matplotlib.pyplot as plt
