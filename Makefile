@@ -1,9 +1,7 @@
 # ==============================================================================
-# Projet de classification - Makefile (squelette)
+# Projet de detection de fraude bancaire - Makefile
 # ==============================================================================
-# Seuls les targets d'INSTALLATION sont fournis. Les autres sont a completer
-# au fil des TP (un `# TODO (Sx)` indique la commande attendue).
-# Environnement gere par uv (Python 3.13) a partir de pyproject.toml.
+# Pipeline pilotee par uv (Python 3.13) a partir de pyproject.toml.
 # Aide : make help
 # ==============================================================================
 
@@ -97,11 +95,11 @@ doctor: check-uv check-venv ## Diagnostique l'environnement de travail
 
 
 # ==============================================================================
-# Pipeline ML  [A COMPLETER]
+# Pipeline ML
 # ==============================================================================
 
-data: ## Prepare/genere le jeu de donnees dans data/
-	# TODO (S0) : appeler votre script de preparation de donnees
+data: ## Telecharge le vrai jeu de donnees Kaggle dans data/raw/
+	bash scripts/get_dataset.sh
 
 train: ## Entraine la baseline -> models/model.joblib (C=.. MAX_ITER=..)
 	$(PYTHON) -m mlproject.train --c $(C) --max-iter $(MAX_ITER)
@@ -122,28 +120,28 @@ predict: ## Appelle l'API /predict avec une transaction d'exemple (scripts/predi
 	$(PYTHON) scripts/predict.py
 
 frontend: ## Lance le frontend Streamlit (voir FRONTEND_PORT, API_URL)
-	# TODO (S14bis) : $(RUN) streamlit run frontend/app.py --server.port $(FRONTEND_PORT)
+	$(RUN) streamlit run frontend/app.py --server.port $(FRONTEND_PORT)
 
 
 # ==============================================================================
-# Docker  [A COMPLETER]
+# Docker
 # ==============================================================================
 
 docker-build: ## Construit l'image d'entrainement
-	# TODO (S8) : docker build -f docker/Dockerfile.train -t mlproject-train .
+	docker build -f docker/Dockerfile.train -t mlproject-train .
 
-docker-run: ## Lance l'entrainement en conteneur
-	# TODO (S8) : docker run --rm -v "$(CURDIR)/../models:/app/models" mlproject-train
+docker-run: ## Lance l'entrainement one-shot en conteneur (profil train)
+	docker compose --profile train run --rm train
 
 docker-up: ## Demarre la stack (mlflow, api, frontend)
-	# TODO (S14) : docker compose -f docker-compose.yml up -d --build mlflow api frontend
+	docker compose up -d --build mlflow api frontend
 
 docker-down: ## Arrete et supprime les conteneurs (conserve les volumes)
-	# TODO (S14) : docker compose -f docker-compose.yml down
+	docker compose down
 
 
 # ==============================================================================
-# Qualite  [A COMPLETER]
+# Qualite
 # ==============================================================================
 
 lint: ## Verifie le style (ruff)

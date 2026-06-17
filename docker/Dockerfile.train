@@ -1,0 +1,15 @@
+FROM python:3.13-slim
+ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY pyproject.toml README.md ./
+COPY src/ ./src/
+RUN pip install --no-cache-dir .
+
+COPY scripts/ ./scripts/
+RUN python scripts/make_sample_data.py
+
+CMD ["python", "-m", "mlproject.train"]
