@@ -147,15 +147,15 @@ docker-down: ## Arrete et supprime les conteneurs (conserve les volumes)
 # ==============================================================================
 
 lint: ## Verifie le style (ruff)
-	# TODO : $(RUN) ruff check mlproject
+	$(RUN) ruff check src scripts tests
 
 format: ## Formate le code (ruff)
-	# TODO : $(RUN) ruff format mlproject
+	$(RUN) ruff format src scripts tests
 
 type: ## Verifie les types (mypy)
-	# TODO : $(RUN) mypy mlproject
+	$(RUN) mypy src/mlproject
 
 test: ## Lance les tests (pytest)
-	# TODO : $(RUN) pytest
+	$(RUN) pytest
 
 check: lint type test ## Workflow qualite complet (lint + types + tests)
