@@ -9,6 +9,7 @@ API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000")
 
 st.set_page_config(page_title="Detection de fraude bancaire", layout="centered")
 st.title("Detection de fraude bancaire")
+st.caption("Le modele predit si une transaction est frauduleuse (classe 1) ou legitime (classe 0).")
 
 api_url = st.text_input("URL de l'API", value=API_URL)
 
@@ -65,15 +66,21 @@ if submitted:
         "device_type": device_type,
     }
     try:
-        response = httpx.post(f"{api_url}/predict", json=payload, timeout=10.0)
-        response.raise_for_status()
-        result = response.json()
+        with st.spinner("Prediction en cours..."):
+            response = httpx.post(f"{api_url}/predict", json=payload, timeout=10.0)
+            response.raise_for_status()
+            result = response.json()
     except httpx.HTTPError as exc:
         st.error(f"Appel a l'API impossible : {exc}")
     else:
-        proba = result["probability"]
-        if result["prediction"] == 1:
-            st.error(f"FRAUDE detectee (probabilite : {proba:.1%})")
+        pred = int(result["prediction"])
+        proba = float(result["probability"])
+        label = "FRAUDE" if pred == 1 else "LEGITIME"
+        col1, col2 = st.columns(2)
+        col1.metric("Resultat", f"{label} (classe {pred})")
+        col2.metric("Probabilite de fraude", f"{proba:.1%}")
+        if pred == 1:
+            st.error("Transaction frauduleuse detectee (classe 1)")
         else:
-            st.success(f"Transaction legitime (probabilite de fraude : {proba:.1%})")
-        st.progress(min(max(proba, 0.0), 1.0))
+            st.success("Transaction legitime (classe 0)")
+        st.caption("Classe 1 = transaction frauduleuse · Classe 0 = transaction legitime")

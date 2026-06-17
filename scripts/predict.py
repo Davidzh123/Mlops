@@ -1,41 +1,41 @@
 from __future__ import annotations
 
-import os
+import argparse
+import json
+import logging
 
 import httpx
 
-API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000")
+from mlproject.config import CATEGORICAL_FEATURES, NUMERIC_FEATURES
+from mlproject.data import load_data
 
-TRANSACTION = {
-    "hour_of_day": 2,
-    "is_weekend": 0,
-    "is_night_transaction": 1,
-    "customer_age": 29,
-    "credit_score": 520,
-    "account_age_years": 1.2,
-    "account_balance": 80.0,
-    "transaction_amount": 4200.0,
-    "num_prev_transactions": 12,
-    "transaction_freq_monthly": 3,
-    "distance_from_home_km": 320.0,
-    "time_since_last_txn_hrs": 0.5,
-    "is_international": 1,
-    "failed_attempts": 3,
-    "pin_changed_recently": 1,
-    "country": "France",
-    "merchant_category": "Electronics",
-    "payment_method": "Credit Card",
-    "device_type": "Mobile",
-}
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger(__name__)
+
+
+def build_payloads(n: int = 5) -> list[dict]:
+    cols = NUMERIC_FEATURES + CATEGORICAL_FEATURES
+    df = load_data().sample(n=n, random_state=0)[cols]
+    return json.loads(df.to_json(orient="records"))
 
 
 def main() -> None:
-    response = httpx.post(f"{API_URL}/predict", json=TRANSACTION, timeout=10.0)
-    response.raise_for_status()
-    result = response.json()
-    label = "FRAUDE" if result["prediction"] == 1 else "LEGITIME"
-    print(f"Prediction : {result['prediction']} ({label})")
-    print(f"Probabilite de fraude : {result['probability']:.2%}")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--url", default="http://127.0.0.1:8000")
+    parser.add_argument("-n", type=int, default=5)
+    args = parser.parse_args()
+
+    payloads = build_payloads(args.n)
+    with httpx.Client(base_url=args.url, timeout=10.0) as client:
+        health = client.get("/health")
+        logger.info("GET /health -> %s %s", health.status_code, health.json())
+
+        for i, payload in enumerate(payloads):
+            response = client.post("/predict", json=payload)
+            logger.info("POST /predict (#%d) -> %s %s", i, response.status_code, response.json())
+
+        info = client.get("/model-info")
+        logger.info("GET /model-info -> %s %s", info.status_code, info.json())
 
 
 if __name__ == "__main__":
