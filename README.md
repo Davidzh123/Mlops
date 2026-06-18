@@ -230,3 +230,28 @@ make frontend       # interface Streamlit
 make docker-up      # stack docker-compose complète
 make check          # lint + types + tests
 ```
+
+## Déploiement sur VPS (cloud)
+
+La stack se déploie telle quelle sur un VPS (Oracle Cloud, DigitalOcean...) avec Docker :
+
+```bash
+# sur le VPS (Ubuntu)
+git clone https://github.com/Davidzh123/Mlops.git && cd Mlops
+make docker-up                 # build + démarre mlflow, api, frontend
+make docker-run                # entraîne et écrit le modèle dans le volume partagé
+docker compose restart api     # l'API recharge le modèle
+```
+
+Puis ouvrir les ports **8000, 8501, 5000** dans le pare-feu (Security List du fournisseur
++ `iptables` côté système sur Oracle). Accès :
+
+- Frontend : `http://IP_DU_VPS:8501`
+- API (docs) : `http://IP_DU_VPS:8000/docs`
+- MLflow : `http://IP_DU_VPS:5000`
+
+> Sur un VPS, régler `MLFLOW_UI_URL` (service `frontend` dans `docker-compose.yml`) sur
+> `http://IP_DU_VPS:5000` pour que le bouton MLflow du frontend pointe vers le bon serveur.
+>
+> ⚠️ Démo uniquement : les services sont exposés sans authentification. Restreindre les
+> règles d'entrée à votre IP et arrêter l'instance après l'évaluation.
