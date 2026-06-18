@@ -48,6 +48,8 @@ services:
       dockerfile: docker/Dockerfile.frontend
     environment:
       API_URL: http://api:8000
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_UI_URL: http://localhost:5000
     ports:
       - "8501:8501"
     depends_on:

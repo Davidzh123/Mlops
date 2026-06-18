@@ -171,6 +171,15 @@ make docker-down      # arrête la stack
 - Frontend : http://localhost:8501
 - MLflow : http://localhost:5000
 
+Le **frontend Streamlit** (`frontend/app.py`) comporte 4 onglets :
+- **Prediction** : formulaire (les 19 variables) qui appelle `/predict` et affiche le verdict (classe + probabilite).
+- **Problematique & dataset** : rappel du cas d'usage metier et du jeu de donnees.
+- **Performance du modele** : metriques des runs, graphiques (ROC AUC par modele + historique) lus depuis MLflow, et un **lien vers l'interface MLflow**.
+- **Architecture** : explication de l'architecture MLflow et du deploiement Docker / VPS.
+
+> L'onglet Performance lit `MLFLOW_TRACKING_URI` (par defaut `sqlite:///mlflow.db` en local,
+> `http://mlflow:5000` en docker-compose) et `MLFLOW_UI_URL` pour le lien.
+
 > Le service `train` lit les données via le montage `./data:/app/data:ro` et écrit le
 > modèle dans le volume `models_data`. Lancer `make docker-run` **avant** d'utiliser l'API
 > pour que `model.joblib` existe.
