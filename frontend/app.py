@@ -10,13 +10,22 @@ API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000")
 MLFLOW_TRACKING_URI = os.environ.get("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db")
 MLFLOW_UI_URL = os.environ.get("MLFLOW_UI_URL", "http://localhost:5000")
 EXPERIMENT = os.environ.get("MLFLOW_EXPERIMENT", "fraude-bancaire")
+AIRFLOW_UI_URL = os.environ.get("AIRFLOW_UI_URL", "http://localhost:8080")
+AIRFLOW_USER = os.environ.get("AIRFLOW_USER", "airflow")
+AIRFLOW_PASSWORD = os.environ.get("AIRFLOW_PASSWORD", "airflow")
 
 st.set_page_config(page_title="Detection de fraude bancaire", layout="centered")
 st.title("Detection de fraude bancaire")
 st.caption("Projet MLOps - classification binaire (classe 1 = fraude, classe 0 = legitime)")
 
-tab_pred, tab_problem, tab_perf, tab_archi = st.tabs(
-    ["Prediction", "Problematique & dataset", "Performance du modele", "Architecture"]
+tab_pred, tab_problem, tab_perf, tab_airflow, tab_archi = st.tabs(
+    [
+        "Prediction",
+        "Problematique & dataset",
+        "Performance du modele",
+        "Orchestration (Airflow)",
+        "Architecture",
+    ]
 )
 
 
@@ -159,6 +168,51 @@ with tab_perf:
         st.info(
             "Aucun run trouve. Lancez un entrainement suivi MLflow "
             "(`make train-models` ou `make train-optuna`)."
+        )
+
+
+# ============================================================================
+# Onglet Orchestration (Airflow)
+# ============================================================================
+with tab_airflow:
+    st.subheader("Orchestration du re-entrainement (Airflow)")
+    st.link_button("Ouvrir l'interface Airflow", AIRFLOW_UI_URL)
+
+    st.markdown(
+        """
+Deux DAGs planifient le pipeline :
+
+- **`model_retraining`** : `prepare_data → train → check_quality` (lundis 3h). La metrique
+  `roc_auc` passe de `train` a `check_quality` via **XCom** ; garde-fou si `roc_auc < 0.65`.
+- **`daily_predictions`** : envoie chaque jour (10h) un lot de transactions a l'API `/predict`.
+        """
+    )
+
+    st.caption("Statut en direct (si l'API Airflow est joignable)")
+    try:
+        with httpx.Client(
+            base_url=AIRFLOW_UI_URL, auth=(AIRFLOW_USER, AIRFLOW_PASSWORD), timeout=5.0
+        ) as client:
+            dags = client.get("/api/v1/dags").json().get("dags", [])
+            rows = []
+            for d in dags:
+                dag_id = d["dag_id"]
+                runs = client.get(
+                    f"/api/v1/dags/{dag_id}/dagRuns",
+                    params={"order_by": "-start_date", "limit": 1},
+                ).json().get("dag_runs", [])
+                state = runs[0]["state"] if runs else "aucun run"
+                rows.append(
+                    {"dag": dag_id, "actif": not d["is_paused"], "dernier_run": state}
+                )
+        if rows:
+            st.dataframe(pd.DataFrame(rows), width="stretch")
+        else:
+            st.info("Aucun DAG trouve dans Airflow.")
+    except Exception:
+        st.info(
+            "Airflow non joignable depuis le frontend. Ouvrez l'interface Airflow "
+            "(bouton ci-dessus) pour suivre les DAGs."
         )
 
 

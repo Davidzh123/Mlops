@@ -255,3 +255,29 @@ Puis ouvrir les ports **8000, 8501, 5000** dans le pare-feu (Security List du fo
 >
 > ⚠️ Démo uniquement : les services sont exposés sans authentification. Restreindre les
 > règles d'entrée à votre IP et arrêter l'instance après l'évaluation.
+
+## Orchestration du ré-entraînement (Airflow)
+
+Deux DAGs Airflow sont fournis dans `dags/` :
+
+- **`model_retraining`** (`dags/retrain_dag.py`) : `prepare_data → train → check_quality`,
+  planifié tous les lundis à 3h (`0 3 * * 1`). La métrique `roc_auc` passe de `train` à
+  `check_quality` via **XCom** ; un **garde-fou** rejette le modèle si `roc_auc < 0.65`.
+- **`daily_predictions`** (`dags/predictions_dag.py`) : envoie chaque jour à 10h
+  (`0 10 * * *`) un lot de transactions à l'API `/predict` (simulation de trafic).
+
+Lancer Airflow en local (docker-compose officiel) :
+
+```bash
+curl -LfO 'https://airflow.apache.org/docs/apache-airflow/stable/docker-compose.yaml'
+mkdir -p ./logs ./plugins
+echo "AIRFLOW_UID=$(id -u)" > .env
+docker compose -f docker-compose.yaml up airflow-init
+docker compose -f docker-compose.yaml up -d
+```
+
+UI sur http://localhost:8080 (login `airflow` / `airflow`). Monter le package `mlproject`
+dans l'environnement Airflow pour que les imports des DAGs fonctionnent.
+
+> Airflow demande ~4 Go de RAM. Pour une simple révision, comprendre les DAGs suffit ;
+> l'exécution réelle est optionnelle.
