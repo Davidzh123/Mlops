@@ -66,6 +66,8 @@ with st.sidebar:
     st.link_button("Code source (GitHub)", GITHUB_URL, use_container_width=True)
     st.link_button("MLflow", MLFLOW_UI_URL, use_container_width=True)
     st.link_button("Airflow", AIRFLOW_UI_URL, use_container_width=True)
+    st.divider()
+    st.caption("Auteur : David Zhou — 5IABD2")
     st.caption("Projet MLOps · ESGI / IABD")
 
 st.markdown(
@@ -322,3 +324,4 @@ Industrialisation MLOps :
         """
     )
     st.markdown(f"Code source complet : [{GITHUB_URL}]({GITHUB_URL})")
+    st.caption("David Zhou — 5IABD2 · ESGI / IABD")
