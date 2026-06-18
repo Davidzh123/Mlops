@@ -15,29 +15,39 @@ AIRFLOW_USER = os.environ.get("AIRFLOW_USER", "admin")
 AIRFLOW_PASSWORD = os.environ.get("AIRFLOW_PASSWORD", "admin")
 GITHUB_URL = os.environ.get("GITHUB_URL", "https://github.com/Davidzh123/Mlops")
 
-st.set_page_config(page_title="FraudGuard", page_icon=None, layout="wide")
+st.set_page_config(page_title="FraudGuard", layout="wide")
 
 st.markdown(
     """
     <style>
-      :root { --brand:#0b3d91; --brand2:#1f6feb; --ok:#1a7f37; --ko:#b42318; }
-      .block-container { padding-top: 1.5rem; }
+      .block-container { padding-top: 1.4rem; max-width: 1200px; }
       .fg-header {
         background: linear-gradient(100deg, #0b3d91 0%, #1f6feb 100%);
-        color: #fff; padding: 1.4rem 1.6rem; border-radius: 12px; margin-bottom: 1.2rem;
+        color: #fff; padding: 1.5rem 1.8rem; border-radius: 14px; margin-bottom: 1.4rem;
+        box-shadow: 0 6px 18px rgba(15,39,66,.18);
       }
-      .fg-header h1 { margin: 0; font-size: 1.55rem; font-weight: 700; letter-spacing: .2px; }
-      .fg-header p { margin: .35rem 0 0; font-size: .95rem; opacity: .9; }
-      .stTabs [data-baseweb="tab-list"] { gap: 4px; }
+      .fg-header h1 { margin: 0; font-size: 1.6rem; font-weight: 800; }
+      .fg-header p { margin: .4rem 0 0; font-size: .98rem; opacity: .92; }
+      .stTabs [data-baseweb="tab-list"] { gap: 6px; }
       .stTabs [data-baseweb="tab"] {
-        background: #f1f5fb; border-radius: 8px 8px 0 0; padding: 8px 14px; font-weight: 600;
+        background: #eef3fb; border-radius: 10px 10px 0 0; padding: 10px 16px; font-weight: 600;
+        color: #0b3d91;
       }
-      .stTabs [aria-selected="true"] { background: #0b3d91; color: #fff; }
+      .stTabs [aria-selected="true"] { background: #1f6feb; color: #fff; }
       div[data-testid="stMetric"] {
-        background: #f7f9fc; border: 1px solid #e6ebf3; border-radius: 10px; padding: 12px 14px;
+        background: #f7f9fc; border: 1px solid #e3eaf5; border-radius: 12px;
+        padding: 14px 16px; box-shadow: 0 2px 6px rgba(15,39,66,.05);
       }
-      .fg-badge-ok { color: var(--ok); font-weight: 700; }
-      .fg-badge-ko { color: var(--ko); font-weight: 700; }
+      div[data-testid="stMetricLabel"] { color: #51607a; font-weight: 600; }
+      .stButton button, .stFormSubmitButton button { border-radius: 10px; font-weight: 600; }
+      .fg-card {
+        background: #f7f9fc; border: 1px solid #e3eaf5; border-radius: 12px;
+        padding: 14px 16px; text-align: center; font-weight: 600; color: #0b3d91;
+      }
+      .fg-arrow { text-align: center; color: #1f6feb; font-size: 1.3rem; }
+      h2, h3 { color: #0b3d91; }
+      section[data-testid="stSidebar"] { background: #0b1f3a; }
+      section[data-testid="stSidebar"] * { color: #dce6f5 !important; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -53,21 +63,19 @@ def api_health() -> bool:
 
 
 with st.sidebar:
-    st.markdown("### FraudGuard")
+    st.markdown("## FraudGuard")
     st.caption("Détection de fraude bancaire — démonstrateur MLOps")
     st.divider()
-    online = api_health()
-    st.markdown(
-        f"<span class='{'fg-badge-ok' if online else 'fg-badge-ko'}'>"
-        f"{'Service en ligne' if online else 'Service indisponible'}</span>",
-        unsafe_allow_html=True,
-    )
+    if api_health():
+        st.markdown("**:green[● Service en ligne]**")
+    else:
+        st.markdown("**:red[● Service indisponible]**")
     st.divider()
     st.link_button("Code source (GitHub)", GITHUB_URL, use_container_width=True)
     st.link_button("MLflow", MLFLOW_UI_URL, use_container_width=True)
     st.link_button("Airflow", AIRFLOW_UI_URL, use_container_width=True)
     st.divider()
-    st.caption("Auteur : David Zhou — 5IABD2")
+    st.markdown("**David Zhou — 5IABD2**")
     st.caption("Projet MLOps · ESGI / IABD")
 
 st.markdown(
@@ -98,7 +106,7 @@ tab_pred, tab_biz, tab_perf, tab_orch, tab_archi = st.tabs(
 with tab_pred:
     st.subheader("Analyser une transaction")
     st.caption("Renseignez les caractéristiques, le modèle estime le risque de fraude.")
-    api_url = st.text_input("URL de l'API", value=API_URL, help="Point d'accès du service d'inférence")
+    api_url = st.text_input("URL de l'API", value=API_URL)
 
     with st.form("predict_form"):
         c1, c2, c3 = st.columns(3)
@@ -184,14 +192,14 @@ with tab_pred:
 with tab_biz:
     st.subheader("Pourquoi détecter la fraude ?")
     c1, c2, c3 = st.columns(3)
-    c1.metric("Fraude dans le jeu de données", "5,5 %")
+    c1.metric("Taux de fraude (données)", "5,5 %")
     c2.metric("Transactions analysées", "1 000 000")
     c3.metric("Métrique de référence", "ROC AUC")
     st.markdown(
         """
 La fraude bancaire coûte cher : pertes financières directes, litiges, atteinte à la confiance
 des clients. Mais bloquer **à tort** une transaction légitime crée de la friction et fait fuir
-les clients. L'enjeu est donc un **équilibre** :
+les clients. L'enjeu est un **équilibre** :
 
 - détecter un maximum de fraudes (limiter les pertes),
 - sans multiplier les fausses alertes (préserver l'expérience client).
@@ -260,7 +268,7 @@ Le modèle ne reste pas figé : un pipeline **Airflow** le **ré-entraîne autom
 
 - **`model_retraining`** : `prepare_data → train → check_quality` (lundis 3h). Garde-fou : rejet
   si `roc_auc < 0.65`.
-- **`daily_predictions`** : envoie chaque jour un lot de transactions à l'API (simulation de trafic).
+- **`daily_predictions`** : envoie chaque jour un lot de transactions à l'API (trafic simulé).
         """
     )
     st.caption("Statut en direct (si Airflow est joignable)")
@@ -300,28 +308,39 @@ Le modèle ne reste pas figé : un pipeline **Airflow** le **ré-entraîne autom
 # ============================================================================
 with tab_archi:
     st.subheader("Architecture de la solution")
+
+    def card(text: str) -> str:
+        return f"<div class='fg-card'>{text}</div>"
+
+    cols = st.columns([3, 1, 3, 1, 3])
+    cols[0].markdown(card("Données<br><small>Kaggle · CSV</small>"), unsafe_allow_html=True)
+    cols[1].markdown("<div class='fg-arrow'>→</div>", unsafe_allow_html=True)
+    cols[2].markdown(
+        card("Entraînement<br><small>scikit-learn / XGBoost / LightGBM</small>"),
+        unsafe_allow_html=True,
+    )
+    cols[3].markdown("<div class='fg-arrow'>→</div>", unsafe_allow_html=True)
+    cols[4].markdown(card("MLflow<br><small>tracking + registry</small>"), unsafe_allow_html=True)
+
+    st.markdown("<div class='fg-arrow'>↓</div>", unsafe_allow_html=True)
+
+    cols = st.columns([3, 1, 3, 1, 3])
+    cols[0].markdown(card("API FastAPI<br><small>/predict</small>"), unsafe_allow_html=True)
+    cols[1].markdown("<div class='fg-arrow'>→</div>", unsafe_allow_html=True)
+    cols[2].markdown(card("Frontend<br><small>Streamlit</small>"), unsafe_allow_html=True)
+    cols[3].markdown("<div class='fg-arrow'>→</div>", unsafe_allow_html=True)
+    cols[4].markdown(card("Airflow<br><small>ré-entraînement</small>"), unsafe_allow_html=True)
+
     st.markdown(
         """
-```
-Données --> Pré-traitement --> Entraînement --> MLflow (tracking + registry)
-                                    |
-                                    v
-                           models/model.joblib
-                                    |
-                                    v
-       Frontend Streamlit --> API FastAPI (/predict) <-- modèle servi
-                                    ^
-                  Airflow (ré-entraînement planifié + garde-fou qualité)
-```
+**Industrialisation MLOps**
 
-Industrialisation MLOps :
-- Reproductibilité : `uv` + `uv.lock`, seed fixée, données figées.
-- Suivi : MLflow (params, métriques, SHAP) + Model Registry.
-- Service : API FastAPI conteneurisée (Docker).
-- Orchestration : stack `docker-compose` (MLflow + API + frontend) ; Airflow pour le ré-entraînement.
-- CI/CD : GitHub Actions (qualité + entraînement) puis build/push de l'image API sur GHCR.
-- Déploiement : stack déployable sur un VPS (cloud).
+- **Reproductibilité** : `uv` + `uv.lock`, seed fixée, données figées.
+- **Suivi** : MLflow (params, métriques, SHAP) + Model Registry.
+- **Service** : API FastAPI conteneurisée (Docker).
+- **Orchestration** : `docker-compose` (MLflow + API + frontend) ; Airflow pour le ré-entraînement.
+- **CI/CD** : GitHub Actions (qualité + entraînement) puis build/push de l'image API sur GHCR.
+- **Déploiement** : stack déployable sur un VPS (cloud).
         """
     )
-    st.markdown(f"Code source complet : [{GITHUB_URL}]({GITHUB_URL})")
-    st.caption("David Zhou — 5IABD2 · ESGI / IABD")
+    st.markdown(f"Code source : [{GITHUB_URL}]({GITHUB_URL}) · **David Zhou — 5IABD2**")
