@@ -33,6 +33,7 @@ RESET  := $(shell printf '\033[0m')
 .PHONY: help \
         check-uv check-venv venv-create install sync deps-sync lock reset-env doctor \
         data train train-models train-optuna mlflow api predict frontend \
+        airflow airflow-down \
         docker-build docker-run docker-up docker-down \
         lint format type test check
 
@@ -138,6 +139,12 @@ docker-up: ## Demarre la stack (mlflow, api, frontend)
 
 docker-down: ## Arrete et supprime les conteneurs (conserve les volumes)
 	docker compose down
+
+airflow: ## Demarre Airflow en local (standalone) sur http://localhost:8080
+	docker compose -f docker-compose.airflow.yml up -d
+
+airflow-down: ## Arrete Airflow
+	docker compose -f docker-compose.airflow.yml down
 
 
 # ==============================================================================

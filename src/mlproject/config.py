@@ -43,6 +43,7 @@ RANDOM_STATE = 42
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", f"sqlite:///{ROOT / 'mlflow.db'}")
 MLFLOW_EXPERIMENT = os.getenv("MLFLOW_EXPERIMENT", "fraude-bancaire")
 MODEL_NAME = os.getenv("MODEL_NAME", "fraude-bancaire-classifier")
+API_URL = os.getenv("API_URL", "http://api:8000")
 
 MLFLOW_EXPERIMENT_DESCRIPTION = (
     "Detection de fraude bancaire : comparaison de 3 modeles (RandomForest, "
