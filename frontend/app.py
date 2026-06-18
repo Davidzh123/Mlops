@@ -47,7 +47,17 @@ st.markdown(
       .fg-arrow { text-align: center; color: #1f6feb; font-size: 1.3rem; }
       h2, h3 { color: #0b3d91; }
       section[data-testid="stSidebar"] { background: #0b1f3a; }
-      section[data-testid="stSidebar"] * { color: #dce6f5 !important; }
+      section[data-testid="stSidebar"] h2,
+      section[data-testid="stSidebar"] p,
+      section[data-testid="stSidebar"] label,
+      section[data-testid="stSidebar"] [data-testid="stCaptionContainer"],
+      section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] { color: #dce6f5 !important; }
+      section[data-testid="stSidebar"] hr { border-color: #24426e; }
+      section[data-testid="stSidebar"] a {
+        background: #1f6feb !important; color: #ffffff !important; border: none !important;
+        border-radius: 10px !important; font-weight: 600 !important; text-decoration: none !important;
+      }
+      section[data-testid="stSidebar"] a:hover { background: #3b82f6 !important; }
     </style>
     """,
     unsafe_allow_html=True,
