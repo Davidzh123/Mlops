@@ -3,11 +3,13 @@ from __future__ import annotations
 import argparse
 
 import joblib
+import mlflow
+import mlflow.sklearn
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import f1_score, roc_auc_score
 from sklearn.pipeline import Pipeline
 
-from mlproject.config import MODEL_DIR
+from mlproject.config import MLFLOW_EXPERIMENT, MLFLOW_TRACKING_URI, MODEL_DIR
 from mlproject.data import load_data, split
 from mlproject.features import build_preprocessor
 
@@ -38,6 +40,17 @@ def train(c: float = 1.0, max_iter: int = 1000) -> dict:
 
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     joblib.dump(model, MODEL_DIR / "model.joblib")
+
+    try:
+        mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+        mlflow.set_experiment(MLFLOW_EXPERIMENT)
+        with mlflow.start_run(run_name="baseline-logreg"):
+            mlflow.log_params({"c": c, "max_iter": max_iter})
+            mlflow.log_metrics(metrics)
+            mlflow.sklearn.log_model(model, name="model")
+    except Exception as exc:
+        print(f"MLflow indisponible, run non logge : {exc}")
+
     return metrics
 
 

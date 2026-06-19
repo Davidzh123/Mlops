@@ -12,7 +12,8 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       PYTHONPATH: /opt/airflow/src
       API_URL: http://host.docker.internal:8000
-      _PIP_ADDITIONAL_REQUIREMENTS: "scikit-learn pandas numpy joblib python-dotenv httpx"
+      MLFLOW_TRACKING_URI: http://host.docker.internal:5000
+      _PIP_ADDITIONAL_REQUIREMENTS: "scikit-learn pandas numpy joblib python-dotenv httpx mlflow"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
