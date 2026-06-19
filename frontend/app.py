@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime, timezone
 
 import httpx
 import pandas as pd
@@ -13,6 +14,7 @@ EXPERIMENT = os.environ.get("MLFLOW_EXPERIMENT", "fraude-bancaire")
 AIRFLOW_UI_URL = os.environ.get("AIRFLOW_UI_URL", "http://localhost:8080")
 AIRFLOW_USER = os.environ.get("AIRFLOW_USER", "admin")
 AIRFLOW_PASSWORD = os.environ.get("AIRFLOW_PASSWORD", "admin")
+RETRAIN_DAG = os.environ.get("RETRAIN_DAG", "model_retraining")
 GITHUB_URL = os.environ.get("GITHUB_URL", "https://github.com/Davidzh123/Mlops")
 
 st.set_page_config(page_title="FraudGuard", layout="wide")
@@ -70,6 +72,29 @@ def api_health() -> bool:
         return r.status_code == 200 and r.json().get("model_loaded", False)
     except Exception:
         return False
+
+
+def humanize_delta(target_iso: str | None) -> str:
+    if not target_iso:
+        return "non planifié"
+    try:
+        target = datetime.fromisoformat(target_iso.replace("Z", "+00:00"))
+    except Exception:
+        return "—"
+    secs = int((target - datetime.now(timezone.utc)).total_seconds())
+    if secs <= 0:
+        return "imminent"
+    days, rem = divmod(secs, 86400)
+    hours, rem = divmod(rem, 3600)
+    mins = rem // 60
+    parts = []
+    if days:
+        parts.append(f"{days} j")
+    if hours:
+        parts.append(f"{hours} h")
+    if not days:
+        parts.append(f"{mins} min")
+    return "dans " + " ".join(parts)
 
 
 with st.sidebar:
@@ -270,7 +295,13 @@ with tab_perf:
 # ============================================================================
 with tab_orch:
     st.subheader("Industrialisation : ré-entraînement automatisé")
-    st.link_button("Ouvrir Airflow", AIRFLOW_UI_URL)
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.link_button("Ouvrir Airflow", AIRFLOW_UI_URL, use_container_width=True)
+    with col_b:
+        trigger = st.button(
+            "Lancer un ré-entraînement maintenant", type="primary", use_container_width=True
+        )
     st.markdown(
         """
 Le modèle ne reste pas figé : un pipeline **Airflow** le **ré-entraîne automatiquement** et
@@ -281,6 +312,24 @@ Le modèle ne reste pas figé : un pipeline **Airflow** le **ré-entraîne autom
 - **`daily_predictions`** : envoie chaque jour un lot de transactions à l'API (trafic simulé).
         """
     )
+
+    if trigger:
+        try:
+            with httpx.Client(
+                base_url=AIRFLOW_UI_URL, auth=(AIRFLOW_USER, AIRFLOW_PASSWORD), timeout=10.0
+            ) as client:
+                client.patch(f"/api/v1/dags/{RETRAIN_DAG}", json={"is_paused": False})
+                r = client.post(f"/api/v1/dags/{RETRAIN_DAG}/dagRuns", json={})
+            if r.status_code in (200, 201):
+                st.success(
+                    "Ré-entraînement déclenché. Suivez la progression dans Airflow, "
+                    "puis le nouveau run apparaîtra dans MLflow."
+                )
+            else:
+                st.error(f"Échec du déclenchement ({r.status_code}) : {r.text}")
+        except Exception as exc:
+            st.error(f"Airflow non joignable : {exc}")
+
     st.caption("Statut en direct (si Airflow est joignable)")
     try:
         with httpx.Client(
@@ -290,6 +339,7 @@ Le modèle ne reste pas figé : un pipeline **Airflow** le **ré-entraîne autom
             rows = []
             for d in dags:
                 dag_id = d["dag_id"]
+                detail = client.get(f"/api/v1/dags/{dag_id}").json()
                 dr = (
                     client.get(
                         f"/api/v1/dags/{dag_id}/dagRuns",
@@ -303,6 +353,9 @@ Le modèle ne reste pas figé : un pipeline **Airflow** le **ré-entraîne autom
                         "dag": dag_id,
                         "actif": not d["is_paused"],
                         "dernier_run": dr[0]["state"] if dr else "aucun",
+                        "prochain_run": humanize_delta(
+                            detail.get("next_dagrun_create_after") or detail.get("next_dagrun")
+                        ),
                     }
                 )
         if rows:
